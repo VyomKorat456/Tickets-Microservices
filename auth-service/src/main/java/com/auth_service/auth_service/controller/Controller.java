@@ -1,7 +1,9 @@
 package com.auth_service.auth_service.controller;
 
 import com.auth_service.auth_service.DTO.request.CreateUserRequestDTO;
+import com.auth_service.auth_service.DTO.request.LoginRequestDTO;
 import com.auth_service.auth_service.DTO.request.UpdateUserRequestDTO;
+import com.auth_service.auth_service.DTO.response.AuthResponseDTO;
 import com.auth_service.auth_service.DTO.response.UserDTO;
 import com.auth_service.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,10 @@ public class Controller {
         UserDTO userDTO = userService.createUser(createUserRequestDTO);
         return new ResponseEntity<>(userDTO, HttpStatus.CREATED);
     }
-
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
+        return ResponseEntity.ok(userService.login(loginRequestDTO));
+    }
     //single user
     @GetMapping("/by/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id){

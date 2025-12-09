@@ -1,11 +1,14 @@
 package com.auth_service.auth_service.DTO.response;
 
 import com.auth_service.auth_service.enums.Role;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Data
+@Builder
 public class UserDTO {
     private Long id;
     private String fullName;

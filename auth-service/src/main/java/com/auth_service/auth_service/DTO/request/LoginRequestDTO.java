@@ -1,15 +1,13 @@
 package com.auth_service.auth_service.DTO.request;
 
-import com.auth_service.auth_service.enums.Role;
+import jakarta.inject.Named;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-public class UpdateUserRequestDTO {
-    private String fullName;
-    private Role role;
-    private Boolean active;
+public class LoginRequestDTO {
     private String email;
+    private String password;
 }

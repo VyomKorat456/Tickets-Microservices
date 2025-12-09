@@ -10,24 +10,26 @@ import org.springframework.stereotype.Component;
 public class UserMapper {
 
     public Users toEntity(CreateUserRequestDTO createUserRequestDTO){
-        if (createUserRequestDTO==null){
-            return null;
-        }
-        return new Users(createUserRequestDTO.getFullName(),
-                createUserRequestDTO.getEmail(),
-                createUserRequestDTO.getRole());
+        if (createUserRequestDTO==null) return null;
+        return Users.builder()
+                .fullName(createUserRequestDTO.getFullName())
+                .email(createUserRequestDTO.getEmail())
+                .role(createUserRequestDTO.getRole())
+                .active(true)
+                .build();
     };
 
     public UserDTO toDTO(Users users){
         if (users == null) return null;
-        return new UserDTO(
-                users.getId(),
-                users.getFullName(),
-                users.getEmail(),
-                users.getRole(),
-                users.isActive(),
-                users.getCreatedAt(),
-                users.getUpdatedAt());
+        return UserDTO.builder()
+                .id(users.getId())
+                .fullName(users.getFullName())
+                .email(users.getEmail())
+                .role(users.getRole())
+                .active(users.isActive())
+                .createdAt(users.getCreatedAt())
+                .updatedAt(users.getUpdatedAt())
+                .build();
     };
 
     public void updateEntityFromDTO(UpdateUserRequestDTO updateUserRequestDTO, Users users){
