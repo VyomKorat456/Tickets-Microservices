@@ -2,14 +2,16 @@ package com.auth_service.auth_service.entity;
 
 import com.auth_service.auth_service.enums.Role;
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
 @Entity
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "Users")
 public class Users {
     @Id
@@ -37,6 +39,12 @@ public class Users {
 
     @Column(nullable = false)
     private Instant updatedAt;
+
+    public Users(String fullName, String email, Role role) {
+        this.fullName=fullName;
+        this.email=email;
+        this.role=role;
+    }
 
     @PrePersist
     public void prePersist() {
