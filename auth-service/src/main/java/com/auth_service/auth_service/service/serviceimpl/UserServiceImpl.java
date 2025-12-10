@@ -88,22 +88,34 @@ public class UserServiceImpl implements UserService {
 
         log.info("=== LOGIN REQUEST RECEIVED ===");
         log.info("Email : {}", request.getEmail());
-        log.info("Password : {}", request.getPassword());
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        log.info("Password length: {}", request.getPassword().length());
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-        log.info("auth success");
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtService.generateToken(userDetails);
+            log.info("✓ Authentication successful");
+            
+            // Fetch the Users entity (which has role information)
+            Users user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            log.info("User loaded: {}, Role: {}", user.getEmail(), user.getRole());
+            
+            // Generate token with role and userId claims
+            String token = jwtService.generateToken(user);
+            log.info("✓ JWT token generated for: {} with role: {}", user.getEmail(), user.getRole());
 
-        return AuthResponseDTO.builder()
-                .accessToken(token)
-                .tokenType("Bearer")
-                .expireId(1800L) // optional, match your jwt.expiration-ms / 1000
-                .build();
+            return AuthResponseDTO.builder()
+                    .accessToken(token)
+                    .tokenType("Bearer")
+                    .expireId(1800L) // optional, match your jwt.expiration-ms / 1000
+                    .build();
+        } catch (Exception e) {
+            log.error("✗ Authentication failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }

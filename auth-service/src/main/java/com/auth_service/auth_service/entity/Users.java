@@ -12,9 +12,14 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 @Entity
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "Users")
 public class Users implements UserDetails {
     @Id

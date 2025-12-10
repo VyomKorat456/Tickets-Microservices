@@ -7,6 +7,7 @@ import com.auth_service.auth_service.DTO.response.AuthResponseDTO;
 import com.auth_service.auth_service.DTO.response.UserDTO;
 import com.auth_service.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/auth/users")
 @RequiredArgsConstructor
+@Slf4j
 public class Controller {
     private final UserService userService;
 
@@ -27,7 +29,16 @@ public class Controller {
     }
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
-        return ResponseEntity.ok(userService.login(loginRequestDTO));
+        log.info("=== POST /auth/users/login ===");
+        log.info("Email: {}", loginRequestDTO.getEmail());
+        try {
+            AuthResponseDTO response = userService.login(loginRequestDTO);
+            log.info("✓ Login successful for: {}", loginRequestDTO.getEmail());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("✗ Login failed: {}", e.getMessage(), e);
+            throw e;
+        }
     }
     //single user
     @GetMapping("/by/{id}")
