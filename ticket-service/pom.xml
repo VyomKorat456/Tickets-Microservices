@@ -8,11 +8,11 @@
         <version>3.5.8</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.auth-service</groupId>
-    <artifactId>auth-service</artifactId>
+    <groupId>com.ticket-service</groupId>
+    <artifactId>ticket-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>auth-service</name>
-    <description>This is auth-service</description>
+    <name>ticket-service</name>
+    <description>This is ticket-service</description>
     <url/>
     <licenses>
         <license/>

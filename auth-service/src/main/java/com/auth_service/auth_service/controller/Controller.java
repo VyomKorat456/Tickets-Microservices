@@ -18,6 +18,7 @@ import java.util.List;
 @RequestMapping("/auth/users")
 @RequiredArgsConstructor
 @Slf4j
+//@CrossOrigin(origins = "http://localhost:5173") // or your frontend URL
 public class Controller {
     private final UserService userService;
 
