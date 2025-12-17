@@ -76,7 +76,6 @@ public class Controller {
 
         Long userId = extractUserIdFromToken(httpRequest);
         boolean isAdmin = hasRole("ADMIN");
-
         return ticketService.updateTicketBasicInfo(ticketId, request, userId, isAdmin);
     }
 

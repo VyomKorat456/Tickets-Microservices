@@ -10,9 +10,13 @@ import com.attachment_service.attachment_service.security.JwtUtil;
 import com.attachment_service.attachment_service.service.AttachmentService;
 import com.attachment_service.attachment_service.service.LocalDiskStorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +33,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     public AttachmentResponseDTO upload(String authorizationHeader, UploadAttachmentRequestDTO uploadAttachmentRequestDTO, MultipartFile file) throws Exception {
         String token = extractToken(authorizationHeader);
         if (token == null || !jwtUtil.isTokenValid(token)) {
-            throw new RuntimeException("Invalid or missing token");
+            throw new com.attachment_service.attachment_service.exception.UnauthorizedException("Invalid or missing token");
         }
         Long userId = jwtUtil.extractUserId(token);
 
@@ -61,7 +65,7 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Override
     public AttachmentResponseDTO getById(Long id) {
         TicketAttachment t = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attachment not found: " + id));
+            .orElseThrow(() -> new com.attachment_service.attachment_service.exception.ResourceNotFoundException("Attachment not found: " + id));
         return attachmentMapper.toDto(t);
     }
 
@@ -69,18 +73,18 @@ public class AttachmentServiceImpl implements AttachmentService {
     public void delete(String authorizationHeader, Long id) throws Exception {
         String token = extractToken(authorizationHeader);
         if (token == null || !jwtUtil.isTokenValid(token)) {
-            throw new RuntimeException("Invalid or missing token");
+            throw new com.attachment_service.attachment_service.exception.UnauthorizedException("Invalid or missing token");
         }
         Long userId = jwtUtil.extractUserId(token);
 
         TicketAttachment t = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Attachment not found: " + id));
+            .orElseThrow(() -> new com.attachment_service.attachment_service.exception.ResourceNotFoundException("Attachment not found: " + id));
 
         boolean isOwner = userId != null && userId.equals(t.getUploadedByUserId());
         boolean isAdmin = jwtUtil.extractRoles(token).stream()
                 .anyMatch(r -> r.equalsIgnoreCase("ADMIN") || r.equalsIgnoreCase("ROLE_ADMIN"));
 
-        if (!isOwner && !isAdmin) throw new RuntimeException("Not allowed to delete");
+        if (!isOwner && !isAdmin) throw new com.attachment_service.attachment_service.exception.UnauthorizedException("Not allowed to delete");
 
         repository.delete(t);
         java.nio.file.Files.deleteIfExists(storage.resolve(t.getFilePath()));
@@ -88,7 +92,37 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     public DownloadResponseDTO download(Long attachmentId) throws Exception {
-        return null;
+        // 1. Get attachment record
+        TicketAttachment attachment = repository.findById(attachmentId)
+                .orElseThrow(() ->
+                        new com.attachment_service.attachment_service.exception.ResourceNotFoundException(
+                                "Attachment not found: " + attachmentId
+                        )
+                );
+
+        // 2. Resolve file path from disk
+        Path filePath = storage.resolve(attachment.getFilePath());
+
+        if (!java.nio.file.Files.exists(filePath)) {
+            throw new com.attachment_service.attachment_service.exception.ResourceNotFoundException(
+                    "File not found on disk"
+            );
+        }
+
+        // 3. Create Spring Resource
+        Resource resource = new FileSystemResource(filePath);
+
+        // 4. Build response DTO
+        DownloadResponseDTO dto = new DownloadResponseDTO();
+        dto.setResource(resource);
+        dto.setFileName(attachment.getFileName());
+        dto.setContentType(
+                attachment.getContentType() != null
+                        ? attachment.getContentType()
+                        : MediaType.APPLICATION_OCTET_STREAM_VALUE
+        );
+
+        return dto;
     }
 
     //helper

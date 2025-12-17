@@ -5,6 +5,7 @@ import com.auth_service.auth_service.DTO.request.LoginRequestDTO;
 import com.auth_service.auth_service.DTO.request.UpdateUserRequestDTO;
 import com.auth_service.auth_service.DTO.response.AuthResponseDTO;
 import com.auth_service.auth_service.DTO.response.UserDTO;
+import com.auth_service.auth_service.enums.Role;
 
 import java.util.List;
 
@@ -20,4 +21,6 @@ public interface UserService {
     void deleteUser(Long id);
 
     AuthResponseDTO login(LoginRequestDTO request);
+
+    List<UserDTO> getUserByRole(Role role);
 }

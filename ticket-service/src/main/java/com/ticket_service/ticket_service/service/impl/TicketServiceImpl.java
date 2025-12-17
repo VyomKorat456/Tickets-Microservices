@@ -100,17 +100,37 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public TicketResponseDTO updateTicketBasicInfo(Long ticketId, TicketUpdateRequestDTO ticketUpdateRequestDTO, Long currentUserId, boolean isAdmin) {
+    public TicketResponseDTO updateTicketBasicInfo(
+            Long ticketId,
+            TicketUpdateRequestDTO request,
+            Long currentUserId,
+            boolean isAdmin
+    ) {
         Ticket ticket = getTicketOrThrow(ticketId);
 
         if (!isAdmin && !ticket.getCreatorUserId().equals(currentUserId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only creator or admin can update ticket");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only creator or admin can update ticket"
+            );
         }
 
-        ticket.setTitle(ticketUpdateRequestDTO.getTitle());
-        ticket.setDescription(ticketUpdateRequestDTO.getDescription());
-        ticket.setType(ticketUpdateRequestDTO.getType());
-        ticket.setPriority(ticketUpdateRequestDTO.getPriority());
+        // ✅ Partial update (NULL SAFE)
+        if (request.getTitle() != null) {
+            ticket.setTitle(request.getTitle());
+        }
+
+        if (request.getDescription() != null) {
+            ticket.setDescription(request.getDescription());
+        }
+
+        if (request.getType() != null) {
+            ticket.setType(request.getType());
+        }
+
+        if (request.getPriority() != null) {
+            ticket.setPriority(request.getPriority());
+        }
 
         Ticket saved = ticketRepository.save(ticket);
         return TicketMapper.toTicketResponseDTO(saved);

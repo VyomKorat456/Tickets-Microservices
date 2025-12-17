@@ -1,18 +1,17 @@
 package com.attachment_service.attachment_service.DTO.response;
 
-import io.opentelemetry.sdk.resources.Resource;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.core.io.Resource;
+import org.springframework.jmx.export.annotation.ManagedNotifications;
 
-@Getter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class DownloadResponseDTO {
-    private final Resource resource;
-    private final String contentType;
-    private final String fileName;
-
-    public DownloadResponseDTO(Resource resource, String contentType, String fileName) {
-        this.resource = resource;
-        this.contentType = contentType;
-        this.fileName = fileName;
-    }
-
+    private  Resource resource;
+    private  String contentType;
+    private  String fileName;
 }

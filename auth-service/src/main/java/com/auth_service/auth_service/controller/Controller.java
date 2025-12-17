@@ -6,6 +6,7 @@ import com.auth_service.auth_service.DTO.request.UpdateUserRequestDTO;
 import com.auth_service.auth_service.DTO.response.AuthResponseDTO;
 import com.auth_service.auth_service.DTO.response.UserDTO;
 import com.auth_service.auth_service.service.UserService;
+import com.auth_service.auth_service.enums.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -50,7 +51,14 @@ public class Controller {
     //all user
     @GetMapping("/all")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
+
         return ResponseEntity.ok(userService.getAllUsers());
+    }
+    @GetMapping("/role/{role}")
+    public ResponseEntity<List<UserDTO>> getUsersByRole(
+            @PathVariable Role role
+    ) {
+        return ResponseEntity.ok(userService.getUserByRole(role));
     }
 
     //update user

@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 public class CreateUserRequestDTO {
     private String fullName;
     private String email;
-    private String password;  // raw password from client
+    private String password; 
     private Role role;
 }
