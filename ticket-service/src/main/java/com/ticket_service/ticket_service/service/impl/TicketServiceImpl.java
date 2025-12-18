@@ -131,7 +131,15 @@ public class TicketServiceImpl implements TicketService {
         if (request.getPriority() != null) {
             ticket.setPriority(request.getPriority());
         }
-
+        if (request.getProjectId() != null) {
+            Project project = projectRepository.findById(request.getProjectId())
+                    .orElseThrow(() ->
+                            new RuntimeException(
+                                    "Project not found: " + request.getProjectId()
+                            )
+                    );
+            ticket.setProject(project);
+        }
         Ticket saved = ticketRepository.save(ticket);
         return TicketMapper.toTicketResponseDTO(saved);
     }

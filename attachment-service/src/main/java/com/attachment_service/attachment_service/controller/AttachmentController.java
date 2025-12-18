@@ -79,6 +79,25 @@ public class AttachmentController {
                 .body(downloadResponseDTO.getResource());
     }
 
+    @PutMapping(
+            value = "/{attachmentId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<AttachmentResponseDTO> update(
+            @RequestHeader(name = "Authorization") String authorization,
+            @PathVariable
+            @NotNull(message = "attachmentId is required")
+            @Positive(message = "attachmentId must be positive")
+            Long attachmentId,
+            @RequestPart("file") MultipartFile file
+    ) throws Exception {
+
+        AttachmentResponseDTO dto =
+                attachmentService.update(authorization, attachmentId, file);
+
+        return ResponseEntity.ok(dto);
+    }
+
     @DeleteMapping("/{attachmentId}")
     public ResponseEntity<Void> delete(
             @RequestHeader(name = "Authorization") String authorization,
@@ -86,5 +105,4 @@ public class AttachmentController {
         attachmentService.delete(authorization, attachmentId);
         return ResponseEntity.noContent().build();
     }
-
 }

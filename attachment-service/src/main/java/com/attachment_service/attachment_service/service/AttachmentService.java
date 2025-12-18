@@ -19,4 +19,9 @@ public interface AttachmentService {
 
     DownloadResponseDTO download(Long attachmentId) throws Exception;
 
+    public AttachmentResponseDTO update(
+            String authorizationHeader,
+            Long attachmentId,
+            MultipartFile newFile
+    ) throws Exception;
 }

@@ -4,23 +4,28 @@ import com.attachment_service.attachment_service.DTO.request.UploadAttachmentReq
 import com.attachment_service.attachment_service.DTO.response.AttachmentResponseDTO;
 import com.attachment_service.attachment_service.DTO.response.DownloadResponseDTO;
 import com.attachment_service.attachment_service.entity.TicketAttachment;
+import com.attachment_service.attachment_service.exception.UnauthorizedException;
 import com.attachment_service.attachment_service.mapper.AttachmentMapper;
 import com.attachment_service.attachment_service.repository.TicketAttachmentRepository;
 import com.attachment_service.attachment_service.security.JwtUtil;
 import com.attachment_service.attachment_service.service.AttachmentService;
 import com.attachment_service.attachment_service.service.LocalDiskStorageService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AttachmentServiceImpl implements AttachmentService {
@@ -124,6 +129,108 @@ public class AttachmentServiceImpl implements AttachmentService {
 
         return dto;
     }
+
+    @Override
+    @Transactional
+    public AttachmentResponseDTO update(
+            String authorizationHeader,
+            Long attachmentId,
+            MultipartFile newFile
+    ) throws Exception {
+
+        String token = extractToken(authorizationHeader);
+        if (token == null || !jwtUtil.isTokenValid(token)) {
+            throw new UnauthorizedException("Invalid or missing token");
+        }
+
+        Long userId = jwtUtil.extractUserId(token);
+        boolean isAdmin = jwtUtil.extractRoles(token).stream()
+                .anyMatch(r -> r.equalsIgnoreCase("ADMIN") || r.equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new UnauthorizedException("Only admin can update ticket attachment");
+        }
+
+    /* ===============================
+       1️⃣ FIND EXISTING ATTACHMENT
+    =============================== */
+        TicketAttachment existing = repository.findById(attachmentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Attachment not found: " + attachmentId)
+                );
+
+        Long ticketId = existing.getTicketId();
+
+        log.info("Updating attachment for ticketId={}", ticketId);
+
+    /* ===============================
+       2️⃣ FIND ALL ATTACHMENTS FOR TICKET
+    =============================== */
+        List<TicketAttachment> oldAttachments =
+                repository.findByTicketId(ticketId);
+
+        log.info("Found {} existing attachments for ticketId={}",
+                oldAttachments.size(), ticketId);
+
+    /* ===============================
+       3️⃣ DELETE OLD FILES (DISK)
+    =============================== */
+        for (TicketAttachment att : oldAttachments) {
+            try {
+                Path path = storage.resolve(att.getFilePath());
+                boolean deleted = Files.deleteIfExists(path);
+
+                log.info(
+                        "Deleted old file | attachmentId={} | path={} | deleted={}",
+                        att.getId(),
+                        path.toAbsolutePath(),
+                        deleted
+                );
+            } catch (Exception ex) {
+                log.error(
+                        "Failed to delete file for attachmentId={}",
+                        att.getId(),
+                        ex
+                );
+            }
+        }
+
+    /* ===============================
+       4️⃣ DELETE OLD DB RECORDS
+    =============================== */
+        repository.deleteAll(oldAttachments);
+        log.info("Deleted old attachment DB records for ticketId={}", ticketId);
+
+    /* ===============================
+       5️⃣ STORE NEW FILE
+    =============================== */
+        String newRelativePath = storage.store(ticketId, newFile);
+
+        log.info("Stored new file for ticketId={} at path={}",
+                ticketId, newRelativePath);
+
+    /* ===============================
+       6️⃣ SAVE NEW ATTACHMENT ROW
+    =============================== */
+        TicketAttachment newEntity = TicketAttachment.builder()
+                .ticketId(ticketId)
+                .fileName(newFile.getOriginalFilename())
+                .filePath(newRelativePath)
+                .fileSize(newFile.getSize())
+                .contentType(newFile.getContentType())
+                .uploadedByUserId(userId)
+                .uploadedAt(Instant.now())
+                .build();
+
+        TicketAttachment saved = repository.save(newEntity);
+
+        log.info("New attachment saved successfully. attachmentId={}", saved.getId());
+
+        return attachmentMapper.toDto(saved);
+    }
+
+
+
 
     //helper
     private String extractToken(String header) {

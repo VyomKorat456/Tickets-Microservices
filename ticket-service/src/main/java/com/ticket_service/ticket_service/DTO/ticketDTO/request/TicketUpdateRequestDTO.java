@@ -10,4 +10,5 @@ public class TicketUpdateRequestDTO {
     private String description;
     private TicketType type;
     private TicketPriority priority;
+    private Long projectId;
 }

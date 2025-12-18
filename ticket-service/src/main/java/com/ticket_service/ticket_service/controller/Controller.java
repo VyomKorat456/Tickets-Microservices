@@ -123,7 +123,7 @@ public class Controller {
         return ticketService.getTicketHistory(ticketId);
     }
 
-    // ------------- helper methods -------------
+   //helpers
 
     private Long extractUserIdFromToken(HttpServletRequest request) {
         String token = resolveToken(request);
